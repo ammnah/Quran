@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جداول طالبات الجمعية الخيرية الإلكترونية لتحفيظ القرآن الكريم</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #002b5e; /* خلفية زرقاء */
+            color: white; /* نص أبيض */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .logo {
+            width: 80px;
+            display: block;
+            margin: auto;
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 20px;
+        }
+
+        table {
+            width: 100%;
+            margin: 10px auto;
+            border-collapse: collapse;
+            background-color: white;
+            color: #002b5e;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #002b5e;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #004080;
+            color: white;
+        }
+
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #004080;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 90%;
+            max-width: 250px;
+        }
+
+        button:hover {
+            background-color: #002b5e;
+        }
+
+        .completed {
+            background-color: #ccffcc;
+        }
+
+        .footer {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img src="شعار الجمعيه.jpeg" alt="شعار الجمعية" class="logo"> <!-- شعار الجمعية -->
+            <h1>جداول طالبات الجمعية الخيرية الإلكترونية لتحفيظ القرآن الكريم</h1>
+            <p>المعلمة: <span style="font-weight: bold;">أروى المضحي</span></p>
+            <p>الحلقة: <span style="font-weight: bold;">حلقة زينب بنت عثمان -رضي الله عنها-</span></p>
+        </div>
+
+        <label for="student-name">اسم الطالبة:</label>
+        <input type="text" id="student-name">
+        <button onclick="confirmStudent()">تأكيد اسم الطالبة</button>
+
+        <div id="student-section" style="display:none;">
+            <h2 id="student-title"></h2>
+            <table id="schedule-table">
+                <thead>
+                    <tr>
+                        <th>اليوم</th>
+                        <th>مقدار الحفظ</th>
+                        <th>المراجعة</th>
+                        <th>✓</th>
+                        <th>تعديل</th>
+                        <th>حذف</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <label for="day">اليوم:</label>
+            <select id="day">
+                <option>الأحد</option>
+                <option>الإثنين</option>
+                <option>الثلاثاء</option>
+                <option>الأربعاء</option>
+                <option>الخميس</option>
+            </select>
+
+            <label for="memorization">مقدار الحفظ:</label>
+            <input type="text" id="memorization">
+
+            <label for="review">المراجعة:</label>
+            <input type="text" id="review">
+
+            <div class="buttons">
+                <button onclick="addToTable()">إضافة إلى الجدول</button>
+                <button onclick="addNewStudent()">إضافة طالبة جديدة</button>
+                <button onclick="saveTableAsImage()">حفظ الجدول كصورة</button>
+                <button onclick="showSavedSchedules()">عرض جداول الطالبات</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>هذا الموقع تم إنشاؤه وتطويره بواسطة الطالبة: آمنة عسيري</p>
+    </div>
+
+    <script>
+        let currentStudent = null;
+
+        function confirmStudent() {
+            let studentName = document.getElementById("student-name").value;
+            if (studentName.trim() !== "") {
+                currentStudent = studentName;
+                document.getElementById("student-section").style.display = "block";
+                document.getElementById("student-title").innerText = "جدول الطالبة: " + studentName;
+                loadStudentSchedule(studentName);
+            } else {
+                alert("يرجى إدخال اسم الطالبة!");
+            }
+        }
+
+        function loadStudentSchedule(studentName) {
+            let schedules = JSON.parse(localStorage.getItem('schedules')) || {};
+            let table = document.getElementById("schedule-table").getElementsByTagName("tbody")[0];
+            table.innerHTML = "";
+
+            if (schedules[studentName]) {
+                schedules[studentName].forEach(rowData => {
+                    let row = table.insertRow();
+                    row.insertCell(0).innerText = rowData.day;
+                    row.insertCell(1).innerText = rowData.memorization;
+                    row.insertCell(2).innerText = rowData.review;
+
+                    let completeCell = row.insertCell(3);
+                    let completeCheck = document.createElement("input");
+                    completeCheck.type = "checkbox";
+                    completeCheck.checked = rowData.completed;
+                    completeCheck.onclick = function() {
+                        if (this.checked) {
+                            row.classList.add("completed");
+                        } else {
+                            row.classList.remove("completed");
+                        }
+                        saveSchedule();
+                    };
+                    completeCell.appendChild(completeCheck);
+
+                    let editCell = row.insertCell(4);
+                    let editButton = document.createElement("button");
+                    editButton.innerText = "تعديل";
+                    editButton.onclick = function() {
+                        let newMemorization = prompt("تعديل مقدار الحفظ:", rowData.memorization);
+                        let newReview = prompt("تعديل المراجعة:", rowData.review);
+                        if (newMemorization !== null) row.cells[1].innerText = newMemorization;
+                        if (newReview !== null) row.cells[2].innerText = newReview;
+                        saveSchedule();
+                    };
+                    editCell.appendChild(editButton);
+
+                    let deleteCell = row.insertCell(5);
+                    let deleteButton = document.createElement("button");
+                    deleteButton.innerText = "حذف";
+                    deleteButton.onclick = function() {
+                        if (confirm("هل أنت متأكد؟")) {
+                            table.deleteRow(row.rowIndex - 1);
+                            saveSchedule();
+                        }
+                    };
+                    deleteCell.appendChild(deleteButton);
+                });
+            }
+        }
+
+        function addToTable() {
+            let day = document.getElementById("day").value;
+            let memorization = document.getElementById("memorization").value;
+            let review = document.getElementById("review").value;
+
+            if (day && memorization && review) {
+                let table = document.getElementById("schedule-table").getElementsByTagName("tbody")[0];
+                let row = table.insertRow();
+                row.insertCell(0).innerText = day;
+                row.insertCell(1).innerText = memorization;
+                row.insertCell(2).innerText = review;
+
+                let completeCell = row.insertCell(3);
+                let completeCheck = document.createElement("input");
+                completeCheck.type = "checkbox";
+                completeCheck.onclick = function() {
+                    if (this.checked) {
+                        row.classList.add("completed");
+                    } else {
+                        row.classList.remove("completed");
+                    }
+                    saveSchedule();
+                };
+                completeCell.appendChild(completeCheck);
+
+                let editCell = row.insertCell(4);
+                let editButton = document.createElement("button");
+                editButton.innerText = "تعديل";
+                editButton.onclick = function() {
+                    let newMemorization = prompt("تعديل مقدار الحفظ:", memorization);
+                    let newReview = prompt("تعديل المراجعة:", review);
+                    if (newMemorization !== null) row.cells[1].innerText = newMemorization;
+                    if (newReview !== null) row.cells[2].innerText = newReview;
+                    saveSchedule();
+                };
+                editCell.appendChild(editButton);
+
+                let deleteCell = row.insertCell(5);
+                let deleteButton = document.createElement("button");
+                deleteButton.innerText = "حذف";
+                deleteButton.onclick = function() {
+                    if (confirm("هل أنت متأكد؟")) {
+                        table.deleteRow(row.rowIndex - 1);
+                        saveSchedule();
+                    }
+                };
+                deleteCell.appendChild(deleteButton);
+
+                saveSchedule();
+            } else {
+                alert("يرجى ملء جميع الحقول!");
+            }
+        }
+
+        function saveSchedule() {
+            let table = document.getElementById("schedule-table").getElementsByTagName("tbody")[0];
+            let rows = table.rows;
+            let schedules = JSON.parse(localStorage.getItem('schedules')) || {};
+            schedules[currentStudent] = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                let row = rows[i];
+                schedules[currentStudent].push({
+                    day: row.cells[0].innerText,
+                    memorization: row.cells[1].innerText,
+                    review: row.cells[2].innerText,
+                    completed: row.cells[3].getElementsByTagName('input')[0].checked
+                });
+            }
+
+            localStorage.setItem('schedules', JSON.stringify(schedules));
+        }
+
+        function addNewStudent() {
+            document.getElementById("student-name").value = "";
+            document.getElementById("student-section").style.display = "none";
+            currentStudent = null;
+        }
+
+        function saveTableAsImage() {
+            alert("سيتم حفظ الجدول كصورة! (ميزة قيد التطوير)");
+        }
+
+        function showSavedSchedules() {
+            let schedules = JSON.parse(localStorage.getItem('schedules')) || {};
+            let scheduleList = Object.keys(schedules).join("\n");
+            alert("جداول الطالبات المحفوظة:\n" + scheduleList);
+        }
+    </script>
+
+</body>
+</html>
