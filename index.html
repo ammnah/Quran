@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جداول الطالبات</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- الشعار -->
+    <img src="شعار الجمعيه.jpeg" alt="شعار الجمعية" width="150">
+    
+    <h2 class="title">جداول طالبات الجمعية الخيرية الإلكترونية لتحفيظ القرآن الكريم</h2>
+    
+    <!-- اسم المعلمة والحلقة -->
+    <div class="teacher-info">
+        <p>المعلمة: <span>أروى المضحي</span></p>
+        <p>حلقة: <span>زينب بنت عثمان رضي الله عنها</span></p>
+    </div>
+
+    <div class="container">
+        <!-- إدخال اسم الطالبة -->
+        <div class="student-name">
+            <label for="studentName">اسم الطالبة:</label>
+            <input type="text" id="studentName" class="name-input" placeholder="اسم الطالبة">
+        </div>
+        <button onclick="submitName()">تأكيد اسم الطالبة</button>
+
+        <table id="scheduleTable">
+            <thead>
+                <tr>
+                    <th colspan="5" id="studentNameCell">اسم الطالبة: <span id="displayName"></span></th>
+                </tr>
+                <tr>
+                    <th>اليوم</th>
+                    <th>مقدار الحفظ</th>
+                    <th>المراجعة</th>
+                    <th>تم الحفظ؟</th>
+                    <th>حذف</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <select id="days">
+            <option value="الأحد">الأحد</option>
+            <option value="الإثنين">الإثنين</option>
+            <option value="الثلاثاء">الثلاثاء</option>
+            <option value="الأربعاء">الأربعاء</option>
+            <option value="الخميس">الخميس</option>
+        </select>
+        <input type="text" id="memorization" placeholder="مقدار الحفظ">
+        <input type="text" id="review" placeholder="المراجعة">
+        <button onclick="addToTable()">إضافة إلى الجدول</button>
+        <button onclick="downloadTable()">تحميل الجدول كصورة</button>
+        <button onclick="addNewStudent()">إضافة طالبة جديدة</button>
+        <button onclick="viewAllTables()">عرض جميع الجداول</button>
+    </div>
+
+    <script src="script.js">
+        document.addEventListener("DOMContentLoaded", function () {
+    let studentName = "";
+    let tablesData = []; // تخزين الجداول
+
+    function submitName() {
+        const nameInput = document.getElementById("studentName");
+        studentName = nameInput.value.trim();
+        if (!studentName) {
+            alert("يرجى إدخال اسم الطالبة.");
+            return;
+        }
+
+        document.getElementById("displayName").textContent = studentName;
+        nameInput.disabled = true;
+        nameInput.style.display = "none";
+        document.getElementById("studentNameCell").style.display = "table-row";
+    }
+
+    function addToTable() {
+        if (!studentName) {
+            alert("يرجى إدخال اسم الطالبة أولاً.");
+            return;
+        }
+
+        const day = document.getElementById("days").value;
+        const memorization = document.getElementById("memorization").value.trim();
+        const review = document.getElementById("review").value.trim();
+
+        if (!memorization) {
+            alert("يرجى إدخال مقدار الحفظ.");
+            return;
+        }
+
+        const table = document.getElementById("scheduleTable").getElementsByTagName("tbody")[0];
+        const newRow = table.insertRow();
+
+        newRow.insertCell(0).textContent = day;
+
+        const memorizationCell = newRow.insertCell(1);
+        memorizationCell.textContent = memorization;
+        memorizationCell.onclick = () => editCell(memorizationCell);
+
+        const reviewCell = newRow.insertCell(2);
+        reviewCell.textContent = review;
+        reviewCell.onclick = () => editCell(reviewCell);
+
+        const checkCell = newRow.insertCell(3);
+        const checkBox = document.createElement("input");
+        checkBox.type = "checkbox";
+        checkCell.appendChild(checkBox);
+
+        const deleteCell = newRow.insertCell(4);
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "حذف";
+        deleteButton.onclick = () => deleteRow(newRow);
+        deleteCell.appendChild(deleteButton);
+
+        document.getElementById("memorization").value = "";
+        document.getElementById("review").value = "";
+
+        tablesData.push({ day, memorization, review });
+    }
+
+    function editCell(cell) {
+        const oldValue = cell.textContent;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = oldValue;
+        input.onblur = () => {
+            cell.textContent = input.value.trim() || oldValue;
+        };
+        cell.textContent = "";
+        cell.appendChild(input);
+        input.focus();
+    }
+
+    function deleteRow(row) {
+        row.remove();
+    }
+
+    function saveAsImage() {
+        const tableContainer = document.querySelector(".container");
+        html2canvas(tableContainer).then(canvas => {
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL();
+            link.download = "جدول_الطالبة.png";
+            link.click();
+        });
+    }
+
+    function addNewStudent() {
+        location.reload();
+    }
+
+    function showAllTables() {
+        const tablesPage = window.open("", "_blank");
+        tablesPage.document.write("<html><head><title>جميع الجداول</title></head><body><h2>جميع الجداول</h2><table border='1'><tr><th>اليوم</th><th>مقدار الحفظ</th><th>المراجعة</th></tr>");
+        tablesData.forEach(data => {
+            tablesPage.document.write(<tr><td>${data.day}</td><td>${data.memorization}</td><td>${data.review}</td></tr>);
+        });
+        tablesPage.document.write("</table></body></html>");
+    }
+
+    document.getElementById("submitNameBtn").onclick = submitName;
+    document.getElementById("addToTableBtn").onclick = addToTable;
+    document.getElementById("saveAsImageBtn").onclick = saveAsImage;
+    document.getElementById("addNewStudentBtn").onclick = addNewStudent;
+    document.getElementById("showAllTablesBtn").onclick = showAllTables;
+});
+    </script>
+
+
+</body>
+</html>
